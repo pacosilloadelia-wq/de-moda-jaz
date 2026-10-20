@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modest Line | Boutique La Paz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Playfair+Display:ital,wght@0,700;1,400&family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --guindo: #2b0101;
+            --oro: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            --oro-solido: #d4af37;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--guindo);
+            background-image: linear-gradient(rgba(43, 1, 1, 0.94), rgba(43, 1, 1, 0.94)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='%23d4af37' fill-opacity='0.08'%3E%3Cpath d='M50 50c0-15 10-25 25-25s25 10 25 25-10 25-25 25-25-10-25-25zm-50 0c0-15 10-25 25-25s25 10 25 25-10 25-25 25-25-10-25-25zM25 0c0 15 10 25 25 25s25-10 25-25-10-25-25-25-25 10-25 25zM25 100c0-15 10-25 25-25s25 10 25 25-10 25-25 25-25-10-25-25z'/%3E%3C/g%3E%3C/svg%3E");
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .gold-text { font-family: 'Cinzel Decorative', cursive; background: var(--oro); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% auto; animation: shine 5s linear infinite; }
+        @keyframes shine { to { background-position: 200% center; } }
+
+        header { padding: 60px 20px; text-align: center; border-bottom: 1px solid var(--oro-solido); background: rgba(0,0,0,0.4); }
+        .cart-btn { position: fixed; top: 20px; right: 20px; background: var(--oro); padding: 15px 25px; color: #000; font-weight: 700; z-index: 1000; cursor: pointer; box-shadow: 0 0 15px rgba(212,175,55,0.5); }
+        .container { max-width: 1400px; margin: 40px auto; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(212,175,55,0.2); padding: 20px; text-align: center; position: relative; transition: 0.4s; }
+        .card.sold-out { opacity: 0.6; filter: grayscale(0.5); }
+        .card img { width: 100%; height: 450px; object-fit: cover; margin-bottom: 15px; border: 1px solid rgba(212,175,55,0.1); cursor: pointer; }
+        
+        .size-select { width: 100%; padding: 12px; background: var(--guindo); border: 1px solid var(--oro-solido); color: white; margin-bottom: 15px; cursor: pointer; }
+        .price { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--oro-solido); margin: 10px 0; }
+        
+        .btn-action { background: var(--oro); border: none; padding: 15px; width: 100%; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        .btn-action.disabled { background: #555; color: #888; cursor: not-allowed; }
+
+        .step-overlay, .details-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--guindo); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .active { display: flex; }
+        .modal-content { background: rgba(0,0,0,0.9); border: 2px solid var(--oro-solido); padding: 40px; width: 100%; max-width: 600px; }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0; background: rgba(255,255,255,0.05); border: 1px solid var(--oro-solido); color: white; font-family: 'Montserrat'; }
+        option { background: var(--guindo); color: white; }
+
+        .wa-final-btn { background: #25D366; color: white; padding: 20px; text-decoration: none; display: block; font-weight: 800; margin-top: 15px; text-align: center; border-radius: 5px; }
+        
+        .delivery-box { background: rgba(212,175,55,0.1); border: 1px dashed var(--oro-solido); padding: 15px; margin: 15px 0; border-radius: 8px; }
+        .checkbox-container { display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; font-weight: bold; }
+        
+        #welcome-msg { color: var(--oro-solido); margin-bottom: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="cart-btn" onclick="openStep(1)">👜 MI BOLSA (<span id="cart-count">0</span>)</div>
+
+<header>
+    <div id="welcome-msg"></div>
+    <h1 class="gold-text" style="font-size: 4rem;">Modest Line</h1>
+    <p style="letter-spacing: 10px; color: var(--oro-solido);">ALTA COSTURA • LA PAZ</p>
+</header>
+
+<div class="container">
+    <div class="grid" id="catalog"></div>
+</div>
+
+<!-- PASO 0: REGISTRO -->
+<div id="step-register" class="step-overlay">
+    <div class="modal-content">
+        <h2 class="gold-text" style="font-size: 2rem; text-align: center;">Bienvenida a Modest Line</h2>
+        <p style="text-align: center; margin-bottom: 20px;">Regístrate una sola vez para acceder a nuestra colección exclusiva.</p>
+        <form onsubmit="event.preventDefault(); initialRegister();">
+            <input type="text" id="reg-name" placeholder="Nombre Completo" required>
+            <input type="tel" id="reg-phone" placeholder="Celular" required>
+            <input type="email" id="reg-email" placeholder="Correo Electrónico" required>
+            <input type="text" id="reg-zone" placeholder="Zona de entrega" required>
+            <input type="text" id="reg-street" placeholder="Calle / Avenida" required>
+            <input type="text" id="reg-door" placeholder="Nro de Puerta" required>
+            <button type="submit" class="btn-action" style="margin-top: 15px;">Empezar a Comprar</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL DETALLES VESTIDO (RESTAURADO) -->
+<div id="details-modal" class="details-overlay">
+    <div class="modal-content">
+        <h2 id="d-name" class="gold-text" style="font-size: 2rem; margin-bottom: 20px;"></h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            <img id="d-img-f" src="" style="width:100%; height:200px; object-fit:cover;">
+            <img id="d-img-b" src="" style="width:100%; height:200px; object-fit:cover;">
+            <img id="d-img-s" src="" style="width:100%; height:200px; object-fit:cover;">
+        </div>
+        <p style="margin-bottom: 20px; line-height: 1.6;">Diseño exclusivo de alta costura. Corte elegante y materiales de primera calidad.</p>
+        <button class="btn-action" onclick="closeAll()">Cerrar</button>
+    </div>
+</div>
+
+<!-- PASO 1: CARRITO -->
+<div id="step-1" class="step-overlay">
+    <div class="modal-content">
+        <h2 class="gold-text">Tu Selección</h2>
+        <div id="cart-items" style="margin-top: 20px;"></div>
+        <div style="font-size: 2rem; text-align: right; color: var(--oro-solido); margin: 20px 0;">Total: <span id="total-bs">0</span> Bs</div>
+        <button class="btn-action" onclick="openStep(3)">Finalizar Pedido</button>
+        <p onclick="closeAll()" style="margin-top:20px; text-align:center; cursor:pointer;">← Seguir viendo</p>
+    </div>
+</div>
+
+<!-- PASO 3: PAGO Y DELIVERY -->
+<div id="step-3" class="step-overlay">
+    <div class="modal-content" style="text-align: center; border-radius: 15px;">
+        <h2 class="gold-text" style="font-size: 2.2rem; margin-bottom: 10px;">Finalizar Pago</h2>
+        <div style="background: rgba(255,255,255,0.05); padding: 15px; border: 1px solid var(--oro-solido); margin-bottom: 15px;">
+            <p style="font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--oro-solido);">
+                <span id="final-total">0</span> Bs
+            </p>
+        </div>
+
+        <div class="delivery-box">
+            <label class="checkbox-container">
+                <input type="checkbox" id="delivery-check" onchange="toggleDeliveryOptions()"> 
+                <span>🛵 ¿SOLICITAR ENVÍO A DOMICILIO?</span>
+            </label>
+            <div id="delivery-options" style="display: none; margin-top: 10px;">
+                <select id="delivery-dept" onchange="updateWhatsAppLink()">
+                    <option value="La Paz">La Paz</option>
+                    <option value="Santa Cruz">Santa Cruz</option>
+                    <option value="Cochabamba">Cochabamba</option>
+                    <option value="Oruro">Oruro</option>
+                    <option value="Potosí">Potosí</option>
+                    <option value="Tarija">Tarija</option>
+                    <option value="Chuquisaca">Chuquisaca</option>
+                    <option value="Beni">Beni</option>
+                    <option value="Pando">Pando</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 10px; display: inline-block; border-radius: 10px; margin-bottom: 15px;">
+            <img src="qr-tienda.jpg" alt="QR de Pago" style="width: 200px; height: 200px; display: block;">
+        </div>
+        <a id="wa-link" href="#" target="_blank" class="wa-final-btn">📱 ENVIAR COMPROBANTE Y PEDIDO</a>
+        <p onclick="closeAll()" style="margin-top:20px; text-align:center; cursor:pointer; color: var(--oro-solido);">← Cancelar</p>
+    </div>
+</div>
+
+<script>
+    const dresses = [
+        { id: 1, name: "Gala Imperial", price: 150, img: "vestido1.jpg", stock: { XS: 5, S: 5, M: 5 } },
+        { id: 2, name: "Seda Illimani", price: 145, img: "vestido2.jpg", stock: { XS: 3, S: 3, M: 3 } },
+        { id: 3, name: "Vino de Altura", price: 135, img: "vestido3.jpg", stock: { XS: 2, S: 2, M: 2 } },
+        { id: 4, name: "Damasco Real", price: 120, img: "vestido4.jpg", stock: { XS: 4, S: 4, M: 4 } },
+        { id: 5, name: "Noche Paceña", price: 110, img: "vestido5.jpg", stock: { XS: 1, S: 1, M: 1 } },
+        { id: 6, name: "Terciopelo Guindo", price: 95, img: "vestido6.jpg", stock: { XS: 6, S: 6, M: 6 } },
+        { id: 7, name: "Aura Gold", price: 85, img: "vestido7.jpg", stock: { XS: 2, S: 2, M: 2 } },
+        { id: 8, name: "Esencia Wine", price: 75, img: "vestido8.jpg", stock: { XS: 3, S: 3, M: 3 } },
+        { id: 9, name: "Clásico Modest", price: 60, img: "vestido9.jpg", stock: { XS: 5, S: 5, M: 5 } },
+        { id: 10, name: "Elegance Soft", price: 50, img: "vestido10.jpg", stock: { XS: 4, S: 4, M: 4 } },
+        { id: 11, name: "Rosa de Invierno", price: 40, img: "vestido11.jpg", stock: { XS: 2, S: 2, M: 2 } },
+        { id: 12, name: "Sencillez Oro", price: 30, img: "vestido12.jpg", stock: { XS: 10, S: 10, M: 10 } }
+    ];
+
+    let cart = [];
+    let userData = null;
+
+    function checkUser() {
+        const savedData = localStorage.getItem('modestLineUser');
+        if (savedData) {
+            userData = JSON.parse(savedData);
+            document.getElementById('welcome-msg').innerText = `Bienvenida, ${userData.name.split(' ')[0]} ✨`;
+        } else {
+            document.getElementById('step-register').classList.add('active');
+        }
+    }
+
+    function initialRegister() {
+        userData = {
+            name: document.getElementById('reg-name').value,
+            phone: document.getElementById('reg-phone').value,
+            email: document.getElementById('reg-email').value,
+            zone: document.getElementById('reg-zone').value,
+            street: document.getElementById('reg-street').value,
+            door: document.getElementById('reg-door').value
+        };
+        localStorage.setItem('modestLineUser', JSON.stringify(userData));
+        closeAll();
+        document.getElementById('welcome-msg').innerText = `Bienvenida, ${userData.name.split(' ')[0]} ✨`;
+    }
+
+    function render() {
+        const catalog = document.getElementById('catalog');
+        catalog.innerHTML = "";
+        dresses.forEach(d => {
+            const totalStock = Object.values(d.stock).reduce((a, b) => a + b, 0);
+            const isSoldOut = totalStock === 0;
+            const sizeOptions = Object.keys(d.stock).filter(s => d.stock[s] > 0).map(s => `<option value="${s}">Talla ${s}</option>`).join('');
+
+            catalog.innerHTML += `
+                <div class="card ${isSoldOut ? 'sold-out' : ''}">
+                    <img src="${d.img}" onclick="viewDetails(${d.id})">
+                    <p style="font-family:'Playfair Display'; font-weight: bold;">${d.name}</p>
+                    ${isSoldOut ? '<p style="color: #ff4d4d;">AGOTADO</p>' : `<select class="size-select" id="size-${d.id}">${sizeOptions}</select>`}
+                    <p class="price">${d.price} Bs</p>
+                    <button class="btn-action ${isSoldOut ? 'disabled' : ''}" onclick="${isSoldOut ? '' : `addToCart(${d.id})`}">
+                        ${isSoldOut ? 'Agotado' : 'Añadir'}
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    function viewDetails(id) {
+        const d = dresses.find(x => x.id === id);
+        document.getElementById('d-name').innerText = d.name;
+        document.getElementById('d-img-f').src = d.img;
+        document.getElementById('d-img-b').src = d.img.replace('.jpg', '-back.jpg');
+        document.getElementById('d-img-s').src = d.img.replace('.jpg', '-side.jpg');
+        document.getElementById('details-modal').classList.add('active');
+    }
+
+    function toggleDeliveryOptions() {
+        const isDelivery = document.getElementById('delivery-check').checked;
+        document.getElementById('delivery-options').style.display = isDelivery ? 'block' : 'none';
+        updateWhatsAppLink();
+    }
+
+    function openStep(step) {
+        closeAll();
+        if(step === 1) {
+            const list = document.getElementById('cart-items');
+            list.innerHTML = cart.map(i => `<p>• ${i.name} (${i.size}) - ${i.price} Bs</p>`).join('');
+            document.getElementById('total-bs').innerText = cart.reduce((a,b) => a + b.price, 0);
+        }
+        if(step === 3) {
+            document.getElementById('final-total').innerText = cart.reduce((a,b) => a + b.price, 0);
+            updateWhatsAppLink();
+        }
+        document.getElementById(`step-${step}`).classList.add('active');
+    }
+
+    function updateWhatsAppLink() {
+        const isDelivery = document.getElementById('delivery-check').checked;
+        const dept = document.getElementById('delivery-dept').value;
+        const total = cart.reduce((a, b) => a + b.price, 0);
+        const items = cart.map(i => `• ${i.name} (Talla ${i.size})`).join("%0A");
+        
+        let deliveryText = isDelivery ? 
+            `%0A%0A*🛵 TIPO:* ENVÍO NACIONAL%0A📍 *Departamento:* ${dept}%0A🏠 *Dirección:* ${userData.zone}, ${userData.street} #${userData.door}` : 
+            `%0A%0A*🏪 TIPO:* RECOJO EN TIENDA`;
+
+        const msg = `¡Hola Modest Line! Mi pedido es:%0A%0A` +
+                    `*Nombre:* ${userData.name}%0A` +
+                    `*Email:* ${userData.email}%0A` +
+                    `*Tel:* ${userData.phone}${deliveryText}%0A%0A` +
+                    `*Productos:*%0A${items}%0A%0A` +
+                    `*TOTAL:* ${total} Bs`;
+
+        document.getElementById('wa-link').href = `https://wa.me/59169828917?text=${msg}`;
+    }
+
+    function addToCart(id) {
+        const d = dresses.find(x => x.id === id);
+        const size = document.getElementById(`size-${id}`).value;
+        d.stock[size]--;
+        cart.push({...d, size: size});
+        document.getElementById('cart-count').innerText = cart.length;
+        render();
+        alert(`${d.name} talla ${size} añadido.`);
+    }
+
+    function closeAll() { document.querySelectorAll('.step-overlay, .details-overlay').forEach(s => s.classList.remove('active')); }
+
+    render();
+    checkUser();
+</script>
+</body>
+</html>
